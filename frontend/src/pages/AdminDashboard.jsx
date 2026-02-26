@@ -39,7 +39,7 @@ export default function AdminDashboard() {
     const fetchArtworks = async () => {
         try {
             const res = await API.get('/artworks');
-            setArtworks(res.data);
+            setArtworks(Array.isArray(res.data) ? res.data : []);
         } catch (err) { console.error(err); }
         setLoading(false);
     };
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
     const fetchOrders = async () => {
         try {
             const res = await API.get('/orders');
-            setOrders(res.data);
+            setOrders(Array.isArray(res.data) ? res.data : []);
         } catch (err) { console.error(err); }
     };
 

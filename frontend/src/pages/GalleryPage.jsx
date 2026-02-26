@@ -23,8 +23,9 @@ export default function GalleryPage() {
     useEffect(() => {
         API.get('/artworks')
             .then(res => {
-                setArtworks(res.data);
-                setFiltered(res.data);
+                const data = Array.isArray(res.data) ? res.data : [];
+                setArtworks(data);
+                setFiltered(data);
                 setLoading(false);
             })
             .catch(err => {

@@ -15,7 +15,7 @@ export default function OrdersPage() {
 
     useEffect(() => {
         API.get('/orders/my')
-            .then(res => { setOrders(res.data); setLoading(false); })
+            .then(res => { setOrders(Array.isArray(res.data) ? res.data : []); setLoading(false); })
             .catch(err => { console.error(err); setLoading(false); });
     }, []);
 

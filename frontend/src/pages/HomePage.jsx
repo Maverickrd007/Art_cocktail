@@ -24,7 +24,10 @@ export default function HomePage() {
 
     useEffect(() => {
         API.get('/artworks')
-            .then(res => setArtworks(res.data))
+            .then(res => {
+                const data = Array.isArray(res.data) ? res.data : [];
+                setArtworks(data);
+            })
             .catch(err => console.error('Error fetching artworks:', err));
     }, []);
 
