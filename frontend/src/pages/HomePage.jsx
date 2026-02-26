@@ -242,21 +242,23 @@ export default function HomePage() {
 
             {/* ═══════════ CTA BANNER ═══════════ */}
             <section className="py-24 lg:py-32 bg-[var(--charcoal)]">
-                <div className="max-w-3xl mx-auto px-8">
-                    <Reveal className="flex flex-col items-center text-center">
+                <div className="max-w-6xl mx-auto px-6">
+
+                    <div className="flex flex-col items-center text-center">
                         <p className="text-[10px] tracking-[0.5em] uppercase text-[var(--gold)] mb-8">Commission a Piece</p>
                         <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-8 leading-tight">
                             Let's Create Something <br />
                             <span className="text-editorial text-[var(--gold-light)]">Extraordinary</span>
                         </h2>
-                        <p className="text-white/50 text-base max-w-md mx-auto mb-10 leading-relaxed">
+                        <p className="text-white/50 text-base max-w-md mb-10 leading-relaxed">
                             Every space deserves art that speaks. Commission a custom piece tailored to your vision.
                         </p>
                         <Link to="/gallery" className="btn-gold">
                             <span>Browse Collection</span>
                             <HiArrowRight />
                         </Link>
-                    </Reveal>
+                    </div>
+
                 </div>
             </section>
 
