@@ -1,18 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiShoppingCart, HiMenu, HiX, HiUser } from 'react-icons/hi';
+import { HiMenu, HiX } from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
-/**
- * Premium frosted glass Navbar — light theme with Art Cocktail logo.
- */
 export default function Navbar() {
     const { user, isAuthenticated, isAdmin, logout } = useAuth();
     const { cartCount } = useCart();
     const navigate = useNavigate();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 60);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -20,119 +24,97 @@ export default function Navbar() {
         setMobileOpen(false);
     };
 
-    const navLinks = [
-        { to: '/', label: 'Home' },
-        { to: '/gallery', label: 'Gallery' },
-    ];
-
     return (
         <motion.nav
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="fixed top-0 left-0 right-0 z-50 glass-strong"
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+                    ? 'bg-[#F6F3EE]/95 backdrop-blur-md shadow-[0_1px_0_rgba(0,0,0,0.05)]'
+                    : 'bg-transparent'
+                }`}
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
                 <div className="flex items-center justify-between h-20">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 group">
-                        <img
-                            src="/logo.jpg"
-                            alt="Art Cocktail"
-                            className="h-12 w-auto object-contain"
-                        />
+                        <img src="/logo.jpg" alt="Art Cocktail" className="h-10 w-auto object-contain" />
                         <div>
-                            <h1 className="text-xl font-outfit font-bold text-gradient-primary group-hover:opacity-80 transition-opacity leading-tight">
+                            <span className="font-display text-lg font-semibold tracking-tight text-[var(--charcoal)]">
                                 Art Cocktail
-                            </h1>
-                            <p className="text-[10px] tracking-[0.15em] text-text-muted italic">by Swetnisha Sharma</p>
+                            </span>
+                            <p className="text-[9px] tracking-[0.2em] uppercase text-[var(--text-muted)]">
+                                by Swetnisha Sharma
+                            </p>
                         </div>
                     </Link>
 
-                    {/* Desktop Nav Links */}
-                    <div className="hidden md:flex items-center gap-8">
-                        {navLinks.map(link => (
+                    {/* Desktop Links */}
+                    <div className="hidden md:flex items-center gap-10">
+                        {[
+                            { to: '/', label: 'Home' },
+                            { to: '/gallery', label: 'Gallery' },
+                            ...(isAdmin ? [{ to: '/admin', label: 'Dashboard' }] : []),
+                            ...(isAuthenticated ? [{ to: '/orders', label: 'Orders' }] : []),
+                        ].map(link => (
                             <Link
                                 key={link.to}
                                 to={link.to}
-                                className="text-text-secondary hover:text-primary transition-colors duration-300 text-sm tracking-wider uppercase font-medium"
+                                className="text-[11px] tracking-[0.2em] uppercase text-[var(--text-secondary)] hover:text-[var(--charcoal)] transition-colors duration-300"
                             >
                                 {link.label}
                             </Link>
                         ))}
-
-                        {isAdmin && (
-                            <Link
-                                to="/admin"
-                                className="text-text-secondary hover:text-primary transition-colors duration-300 text-sm tracking-wider uppercase font-medium"
-                            >
-                                Dashboard
-                            </Link>
-                        )}
-
-                        {isAuthenticated && (
-                            <Link
-                                to="/orders"
-                                className="text-text-secondary hover:text-primary transition-colors duration-300 text-sm tracking-wider uppercase font-medium"
-                            >
-                                Orders
-                            </Link>
-                        )}
                     </div>
 
-                    {/* Desktop Right Actions */}
-                    <div className="hidden md:flex items-center gap-4">
-                        {/* Cart Icon */}
-                        <Link to="/cart" className="relative group p-2">
-                            <HiShoppingCart className="text-2xl text-text-secondary group-hover:text-primary transition-colors" />
+                    {/* Desktop Right */}
+                    <div className="hidden md:flex items-center gap-6">
+                        <Link
+                            to="/cart"
+                            className="text-[11px] tracking-[0.2em] uppercase text-[var(--text-secondary)] hover:text-[var(--charcoal)] transition-colors relative"
+                        >
+                            Cart
                             {cartCount > 0 && (
-                                <motion.span
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-primary to-primary-light text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md"
-                                >
+                                <span className="absolute -top-2 -right-4 w-4 h-4 bg-[var(--gold)] text-white text-[8px] font-bold rounded-full flex items-center justify-center">
                                     {cartCount}
-                                </motion.span>
+                                </span>
                             )}
                         </Link>
 
                         {isAuthenticated ? (
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2 text-sm text-text-secondary">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-secondary to-secondary-light flex items-center justify-center">
-                                        <HiUser className="text-white text-sm" />
-                                    </div>
-                                    <span className="font-medium">{user?.name}</span>
-                                </div>
+                            <div className="flex items-center gap-4">
+                                <span className="text-[11px] tracking-[0.1em] text-[var(--text-muted)]">
+                                    {user?.name}
+                                </span>
                                 <button
                                     onClick={handleLogout}
-                                    className="text-sm text-text-muted hover:text-primary transition-colors border border-border hover:border-primary/30 px-4 py-1.5 rounded-full"
+                                    className="text-[11px] tracking-[0.2em] uppercase text-[var(--text-muted)] hover:text-[var(--charcoal)] transition-colors"
                                 >
                                     Logout
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-6">
                                 <Link
                                     to="/login"
-                                    className="text-sm text-text-secondary hover:text-primary transition-colors font-medium"
+                                    className="text-[11px] tracking-[0.2em] uppercase text-[var(--text-secondary)] hover:text-[var(--charcoal)] transition-colors"
                                 >
                                     Login
                                 </Link>
                                 <Link
                                     to="/register"
-                                    className="btn-primary text-sm px-5 py-2 rounded-full"
+                                    className="btn-outline px-5 py-2 text-[10px]"
                                 >
-                                    Register
+                                    <span>Register</span>
                                 </Link>
                             </div>
                         )}
                     </div>
 
-                    {/* Mobile Menu Button */}
+                    {/* Mobile Menu */}
                     <button
                         onClick={() => setMobileOpen(!mobileOpen)}
-                        className="md:hidden text-text text-2xl p-2"
+                        className="md:hidden text-[var(--charcoal)] text-2xl"
                     >
                         {mobileOpen ? <HiX /> : <HiMenu />}
                     </button>
@@ -146,41 +128,34 @@ export default function Navbar() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden glass overflow-hidden"
+                        className="md:hidden bg-[var(--bg)]/98 backdrop-blur-lg border-t border-[var(--border)]"
                     >
-                        <div className="px-4 py-4 space-y-3">
-                            {navLinks.map(link => (
+                        <div className="px-6 py-8 space-y-4">
+                            {[
+                                { to: '/', label: 'Home' },
+                                { to: '/gallery', label: 'Gallery' },
+                                { to: '/cart', label: `Cart (${cartCount})` },
+                                ...(isAdmin ? [{ to: '/admin', label: 'Dashboard' }] : []),
+                                ...(isAuthenticated ? [{ to: '/orders', label: 'Orders' }] : []),
+                            ].map(link => (
                                 <Link
                                     key={link.to}
                                     to={link.to}
                                     onClick={() => setMobileOpen(false)}
-                                    className="block text-text-secondary hover:text-primary transition-colors py-2"
+                                    className="block text-[12px] tracking-[0.2em] uppercase text-[var(--text-secondary)] hover:text-[var(--charcoal)] py-2"
                                 >
                                     {link.label}
                                 </Link>
                             ))}
-                            {isAdmin && (
-                                <Link to="/admin" onClick={() => setMobileOpen(false)} className="block text-text-secondary hover:text-primary py-2">
-                                    Dashboard
-                                </Link>
-                            )}
-                            {isAuthenticated && (
-                                <Link to="/orders" onClick={() => setMobileOpen(false)} className="block text-text-secondary hover:text-primary py-2">
-                                    Orders
-                                </Link>
-                            )}
-                            <Link to="/cart" onClick={() => setMobileOpen(false)} className="block text-text-secondary hover:text-primary py-2">
-                                Cart ({cartCount})
-                            </Link>
-                            <div className="accent-line my-3" />
+                            <div className="divider my-4" />
                             {isAuthenticated ? (
-                                <button onClick={handleLogout} className="text-text-muted hover:text-primary transition-colors">
+                                <button onClick={handleLogout} className="text-[12px] tracking-[0.2em] uppercase text-[var(--text-muted)]">
                                     Logout
                                 </button>
                             ) : (
-                                <div className="flex gap-3">
-                                    <Link to="/login" onClick={() => setMobileOpen(false)} className="text-text-secondary hover:text-primary">Login</Link>
-                                    <Link to="/register" onClick={() => setMobileOpen(false)} className="btn-primary px-4 py-1.5 rounded-full text-sm">Register</Link>
+                                <div className="flex gap-4">
+                                    <Link to="/login" onClick={() => setMobileOpen(false)} className="text-[12px] tracking-[0.2em] uppercase text-[var(--text-secondary)]">Login</Link>
+                                    <Link to="/register" onClick={() => setMobileOpen(false)} className="btn-outline px-4 py-2 text-[10px]"><span>Register</span></Link>
                                 </div>
                             )}
                         </div>

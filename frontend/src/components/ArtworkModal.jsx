@@ -1,21 +1,15 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiX, HiShoppingCart } from 'react-icons/hi';
-import { useCart } from '../context/CartContext';
+import { HiX } from 'react-icons/hi';
 
 /**
- * Full-screen artwork preview modal — light frosted design.
+ * Fullscreen dark backdrop modal — cinematic art viewing experience.
  */
-export default function ArtworkModal({ artwork, isOpen, onClose }) {
-    const { addToCart } = useCart();
-    const [added, setAdded] = useState(false);
-
+export default function ArtworkModal({ artwork, isOpen, onClose, onAddToCart }) {
     if (!artwork) return null;
 
-    const handleAddToCart = () => {
-        addToCart(artwork);
-        setAdded(true);
-        setTimeout(() => setAdded(false), 2000);
+    const handleAdd = () => {
+        onAddToCart(artwork);
+        onClose();
     };
 
     return (
@@ -25,104 +19,64 @@ export default function ArtworkModal({ artwork, isOpen, onClose }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                    transition={{ duration: 0.4 }}
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-8"
                     onClick={onClose}
                 >
-                    {/* Backdrop */}
-                    <div className="absolute inset-0 bg-black/30 backdrop-blur-md" />
+                    {/* Dark backdrop */}
+                    <div className="absolute inset-0 bg-black/90" />
 
-                    {/* Modal Content */}
-                    <motion.div
-                        initial={{ scale: 0.8, opacity: 0, y: 50 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.8, opacity: 0, y: 50 }}
-                        transition={{ type: 'spring', duration: 0.5 }}
-                        className="relative bg-white rounded-3xl overflow-hidden max-w-5xl w-full max-h-[90vh] flex flex-col md:flex-row shadow-2xl shadow-black/10"
-                        onClick={(e) => e.stopPropagation()}
+                    {/* Close button */}
+                    <button
+                        onClick={onClose}
+                        className="absolute top-6 right-6 z-10 w-10 h-10 flex items-center justify-center text-white/50 hover:text-white transition-colors"
                     >
-                        {/* Close Button */}
-                        <button
-                            onClick={onClose}
-                            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-text-secondary hover:text-primary transition-colors shadow-md"
-                        >
-                            <HiX className="text-xl" />
-                        </button>
+                        <HiX className="text-xl" />
+                    </button>
 
-                        {/* Image Section */}
-                        <div className="md:w-3/5 h-64 md:h-auto relative overflow-hidden">
+                    {/* Content */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-12 max-w-6xl w-full max-h-[90vh]"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Image */}
+                        <div className="flex-1 flex items-center justify-center">
                             <img
                                 src={artwork.imageUrl}
                                 alt={artwork.title}
-                                className="w-full h-full object-cover"
+                                className="max-w-full max-h-[75vh] object-contain"
                             />
-                            {/* Gradient overlay at bottom for mobile */}
-                            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white/80 to-transparent md:hidden" />
                         </div>
 
-                        {/* Details Section */}
-                        <div className="md:w-2/5 p-8 flex flex-col justify-between overflow-y-auto bg-white">
-                            <div>
-                                <motion.p
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                    className="text-primary text-xs tracking-[0.3em] uppercase mb-2 font-semibold"
-                                >
-                                    {artwork.category}
-                                </motion.p>
+                        {/* Details */}
+                        <div className="lg:w-80 flex flex-col justify-center text-white">
+                            <p className="text-[9px] tracking-[0.4em] uppercase text-[var(--gold)] mb-3">
+                                {artwork.category}
+                            </p>
+                            <h2 className="font-display text-3xl lg:text-4xl font-semibold mb-2">
+                                {artwork.title}
+                            </h2>
+                            <p className="text-white/40 text-sm mb-6">
+                                by Swetnisha Sharma
+                            </p>
 
-                                <motion.h2
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="text-3xl font-outfit font-bold text-text mb-2"
-                                >
-                                    {artwork.title}
-                                </motion.h2>
+                            <div className="w-12 h-px bg-[var(--gold)] mb-6" />
 
-                                <motion.p
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.25 }}
-                                    className="text-text-muted text-sm mb-6"
-                                >
-                                    by Swetnisha Sharma
-                                </motion.p>
+                            <p className="text-white/60 text-sm leading-relaxed mb-8">
+                                {artwork.description}
+                            </p>
 
-                                <div className="accent-line mb-6" />
+                            <p className="font-display text-2xl font-semibold text-[var(--gold-light)] mb-8">
+                                ₹{artwork.price?.toLocaleString('en-IN')}
+                            </p>
 
-                                <motion.p
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="text-text-secondary text-sm leading-relaxed mb-8"
-                                >
-                                    {artwork.description}
-                                </motion.p>
-                            </div>
-
-                            <div>
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4 }}
-                                >
-                                    <p className="text-4xl font-outfit font-bold text-gradient-primary mb-6">
-                                        ₹{artwork.price?.toLocaleString('en-IN')}
-                                    </p>
-
-                                    <button
-                                        onClick={handleAddToCart}
-                                        className={`w-full py-4 rounded-2xl font-semibold text-sm tracking-wider uppercase flex items-center justify-center gap-2 transition-all duration-300 ${added
-                                            ? 'bg-emerald text-white shadow-lg shadow-emerald/30'
-                                            : 'btn-primary'
-                                            }`}
-                                    >
-                                        <HiShoppingCart className="text-lg" />
-                                        {added ? 'Added to Cart!' : 'Add to Cart'}
-                                    </button>
-                                </motion.div>
-                            </div>
+                            <button onClick={handleAdd} className="btn-gold w-full justify-center">
+                                <span>Add to Collection</span>
+                            </button>
                         </div>
                     </motion.div>
                 </motion.div>

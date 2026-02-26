@@ -1,15 +1,28 @@
-import { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { HiArrowRight, HiSparkles } from 'react-icons/hi';
+import { HiArrowRight, HiArrowDown } from 'react-icons/hi';
 import API from '../services/api';
 import ArtworkModal from '../components/ArtworkModal';
 import { useCart } from '../context/CartContext';
 
-/**
- * Immersive homepage with animated mesh gradient hero, parallax effects,
- * floating blobs, and artwork showcase — light theme.
- */
+/* ── Fade-in wrapper for scroll-based reveals ── */
+function Reveal({ children, delay = 0, className = '' }) {
+    const ref = useRef(null);
+    const inView = useInView(ref, { once: true, margin: '-80px' });
+    return (
+        <motion.div
+            ref={ref}
+            initial={{ opacity: 0, y: 40 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className={className}
+        >
+            {children}
+        </motion.div>
+    );
+}
+
 export default function HomePage() {
     const [artworks, setArtworks] = useState([]);
     const [selectedArtwork, setSelectedArtwork] = useState(null);
@@ -17,10 +30,9 @@ export default function HomePage() {
     const { addToCart } = useCart();
     const { scrollY } = useScroll();
 
-    // Parallax transforms for hero
-    const heroY = useTransform(scrollY, [0, 500], [0, 150]);
-    const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
-    const textY = useTransform(scrollY, [0, 300], [0, -50]);
+    const heroOpacity = useTransform(scrollY, [0, 600], [1, 0]);
+    const heroScale = useTransform(scrollY, [0, 600], [1, 1.08]);
+    const textY = useTransform(scrollY, [0, 400], [0, -60]);
 
     useEffect(() => {
         API.get('/artworks')
@@ -28,7 +40,7 @@ export default function HomePage() {
                 const data = Array.isArray(res.data) ? res.data : [];
                 setArtworks(data);
             })
-            .catch(err => console.error('Error fetching artworks:', err));
+            .catch(err => console.error(err));
     }, []);
 
     const openModal = (artwork) => {
@@ -36,285 +48,345 @@ export default function HomePage() {
         setModalOpen(true);
     };
 
-    const containerVariants = {
-        hidden: {},
-        visible: {
-            transition: { staggerChildren: 0.1 }
-        }
-    };
-
-    const cardVariants = {
-        hidden: { opacity: 0, y: 60 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.6, ease: 'easeOut' }
-        }
-    };
+    /* Testimonials */
+    const testimonials = [
+        { name: 'Priya Menon', text: 'The resin artwork transformed our living room into a gallery. Absolutely exquisite craftsmanship.', location: 'Mumbai' },
+        { name: 'Arjun Reddy', text: 'Each piece tells a story. The attention to detail and vibrancy of colors is unmatched.', location: 'Hyderabad' },
+        { name: 'Sneha Kapoor', text: 'I commissioned a custom piece and was blown away by the result. True artistry.', location: 'Delhi' },
+    ];
 
     return (
-        <div className="min-h-screen">
-            {/* ====== HERO SECTION ====== */}
+        <div className="bg-[var(--bg)]">
+            {/* ═══════════ HERO ═══════════ */}
             <section className="relative h-screen flex items-center justify-center overflow-hidden">
-                {/* Animated background blobs */}
-                <div className="absolute inset-0 overflow-hidden">
-                    <div className="absolute top-10 left-10 w-72 h-72 bg-primary/10 rounded-full mix-blend-multiply filter blur-[80px] animate-blob" />
-                    <div className="absolute top-40 right-20 w-72 h-72 bg-secondary/10 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000" />
-                    <div className="absolute bottom-20 left-1/3 w-72 h-72 bg-primary-light/10 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000" />
-                </div>
-
-                {/* Floating particles */}
-                <div className="absolute inset-0">
-                    {[...Array(15)].map((_, i) => (
-                        <motion.div
-                            key={i}
-                            className="absolute rounded-full"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                                width: `${4 + Math.random() * 6}px`,
-                                height: `${4 + Math.random() * 6}px`,
-                                background: i % 2 === 0
-                                    ? 'linear-gradient(135deg, #E85D75, #FF8A65)'
-                                    : 'linear-gradient(135deg, #6366F1, #818CF8)',
-                                opacity: 0.3,
-                            }}
-                            animate={{
-                                y: [0, -20, 0],
-                                opacity: [0.15, 0.4, 0.15],
-                                scale: [1, 1.3, 1],
-                            }}
-                            transition={{
-                                duration: 3 + Math.random() * 4,
-                                repeat: Infinity,
-                                delay: Math.random() * 3,
-                            }}
+                {/* Background artwork — dramatic oversized */}
+                {artworks[0] && (
+                    <motion.div
+                        style={{ scale: heroScale }}
+                        className="absolute inset-0"
+                    >
+                        <img
+                            src={artworks[0].imageUrl}
+                            alt=""
+                            className="w-full h-full object-cover opacity-20"
                         />
-                    ))}
-                </div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg)]/60 via-[var(--bg)]/80 to-[var(--bg)]" />
+                    </motion.div>
+                )}
 
-                {/* Background mesh */}
-                <motion.div
-                    style={{ y: heroY }}
-                    className="absolute inset-0 mesh-gradient"
-                />
-
-                {/* Hero Content */}
+                {/* Hero text */}
                 <motion.div
                     style={{ y: textY, opacity: heroOpacity }}
-                    className="relative z-10 text-center px-4 max-w-4xl"
+                    className="relative z-10 text-center px-6 max-w-5xl"
                 >
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className="flex items-center justify-center gap-2 mb-6"
-                    >
-                        <HiSparkles className="text-primary text-sm" />
-                        <span className="text-primary/70 text-xs tracking-[0.4em] uppercase font-medium">Premium Virtual Gallery</span>
-                        <HiSparkles className="text-primary text-sm" />
-                    </motion.div>
-
-                    <motion.img
-                        src="/logo.jpg"
-                        alt="Art Cocktail"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 1, delay: 0.3 }}
-                        className="h-24 sm:h-32 w-auto mx-auto mb-4 object-contain"
-                    />
+                        className="text-[10px] tracking-[0.5em] uppercase text-[var(--gold)] mb-8"
+                    >
+                        Art Cocktail — by Swetnisha Sharma
+                    </motion.p>
 
                     <motion.h1
-                        initial={{ opacity: 0, y: 50 }}
+                        initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, delay: 0.4 }}
-                        className="text-6xl sm:text-7xl lg:text-8xl font-outfit font-bold mb-2"
+                        transition={{ duration: 1.2, delay: 0.5 }}
+                        className="text-display text-6xl sm:text-7xl md:text-8xl lg:text-[110px] mb-8"
                     >
-                        <span className="text-gradient-primary">Art</span>{' '}
-                        <span className="text-text">Cocktail</span>
+                        Resin Art.
+                        <br />
+                        <span className="text-editorial text-[var(--gold-dark)]">Reimagined.</span>
                     </motion.h1>
 
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.55 }}
-                        className="text-text-muted text-base sm:text-lg italic mb-8 font-outfit"
+                        transition={{ duration: 0.8, delay: 0.9 }}
+                        className="text-[var(--text-muted)] text-base sm:text-lg max-w-xl mx-auto mb-12 leading-relaxed"
                     >
-                        by Swetnisha Sharma
-                    </motion.p>
-
-                    <motion.p
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.7 }}
-                        className="text-text-secondary text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
-                    >
-                        Discover an exquisite collection of paintings and resin artwork.
-                        Each piece is a masterpiece crafted with passion and precision.
+                        Handcrafted resin artwork from Electronic City, Bangalore.
+                        Each piece is a one-of-a-kind creation.
                     </motion.p>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.9 }}
+                        transition={{ duration: 0.8, delay: 1.1 }}
                         className="flex flex-col sm:flex-row items-center justify-center gap-4"
                     >
-                        <Link
-                            to="/gallery"
-                            className="btn-primary px-10 py-4 rounded-full text-sm tracking-wider uppercase flex items-center gap-2"
-                        >
-                            Explore Gallery <HiArrowRight />
+                        <Link to="/gallery" className="btn-outline">
+                            <span>Explore Gallery</span>
+                            <HiArrowRight className="relative z-1" />
                         </Link>
-                        <a
-                            href="#featured"
-                            className="text-text-secondary hover:text-primary transition-colors px-8 py-4 border border-border hover:border-primary/30 rounded-full text-sm tracking-wider uppercase"
-                        >
-                            View Collection
-                        </a>
                     </motion.div>
                 </motion.div>
 
                 {/* Scroll indicator */}
                 <motion.div
-                    animate={{ y: [0, 10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute bottom-10 left-1/2 -translate-x-1/2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 2 }}
+                    className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
                 >
-                    <div className="w-6 h-10 border-2 border-primary/30 rounded-full flex justify-center pt-2">
-                        <motion.div
-                            animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="w-1 h-2 bg-primary rounded-full"
-                        />
-                    </div>
+                    <span className="text-[9px] tracking-[0.3em] uppercase text-[var(--text-muted)]">Scroll</span>
+                    <HiArrowDown className="text-[var(--text-muted)] animate-scroll-down" />
                 </motion.div>
             </section>
 
-            {/* ====== FEATURED ARTWORKS ====== */}
-            <section id="featured" className="py-24 px-4 max-w-7xl mx-auto">
-                {/* Section Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8 }}
-                    className="text-center mb-16"
-                >
-                    <p className="text-primary text-xs tracking-[0.4em] uppercase mb-4 font-semibold">Our Collection</p>
-                    <h2 className="text-4xl sm:text-5xl font-outfit font-bold text-text mb-4">
-                        Featured <span className="text-gradient-primary">Masterpieces</span>
-                    </h2>
-                    <div className="accent-line max-w-xs mx-auto" />
-                </motion.div>
+            {/* ═══════════ DRAMATIC ARTWORK SHOWCASE ═══════════ */}
+            <section className="section-padding">
+                <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+                    <Reveal>
+                        <div className="flex items-center gap-6 mb-4">
+                            <div className="divider-gold" />
+                            <p className="text-[10px] tracking-[0.4em] uppercase text-[var(--gold)]">Selected Works</p>
+                        </div>
+                        <h2 className="text-display text-4xl sm:text-5xl md:text-6xl mb-16">
+                            Featured
+                            <br />
+                            <span className="text-editorial text-[var(--text-muted)]">Collection</span>
+                        </h2>
+                    </Reveal>
 
-                {/* Artwork Grid */}
-                {artworks.length > 0 ? (
-                    <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.1 }}
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-                    >
-                        {artworks.slice(0, 6).map((artwork) => (
-                            <motion.div
-                                key={artwork._id}
-                                variants={cardVariants}
-                                className="group cursor-pointer"
-                                onClick={() => openModal(artwork)}
-                            >
-                                <div className="relative overflow-hidden rounded-2xl bg-white shadow-lg shadow-black/5 card-hover">
-                                    {/* Image with hover zoom */}
-                                    <div className="aspect-[3/4] overflow-hidden">
-                                        <img
-                                            src={artwork.imageUrl}
-                                            alt={artwork.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                    </div>
-
-                                    {/* Hover overlay */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/10 to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500" />
-
-                                    {/* Content overlay */}
-                                    <div className="absolute bottom-0 left-0 right-0 p-6 transform transition-transform duration-500">
-                                        <p className="text-primary/80 text-xs tracking-[0.2em] uppercase mb-1 font-semibold">{artwork.category}</p>
-                                        <h3 className="text-xl font-outfit font-bold text-text mb-1">{artwork.title}</h3>
-                                        <p className="text-text-muted text-xs mb-3">by Swetnisha Sharma</p>
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-2xl font-outfit font-bold text-gradient-primary">
-                                                ₹{artwork.price?.toLocaleString('en-IN')}
-                                            </p>
-                                            <motion.span
-                                                initial={{ opacity: 0, x: -10 }}
-                                                whileInView={{ opacity: 1, x: 0 }}
-                                                className="text-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity font-medium"
-                                            >
-                                                View →
-                                            </motion.span>
+                    {/* Asymmetrical grid — like a gallery exhibition */}
+                    <div className="space-y-12">
+                        {/* First row — large + small */}
+                        {artworks.length > 0 && (
+                            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                <Reveal className="lg:col-span-3">
+                                    <div
+                                        className="relative overflow-hidden cursor-pointer group"
+                                        onClick={() => openModal(artworks[0])}
+                                    >
+                                        <div className="aspect-[4/3] overflow-hidden">
+                                            <img
+                                                src={artworks[0].imageUrl}
+                                                alt={artworks[0].title}
+                                                className="w-full h-full object-cover img-dramatic"
+                                            />
+                                        </div>
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-700" />
+                                        <div className="mt-4">
+                                            <p className="text-[10px] tracking-[0.3em] uppercase text-[var(--gold)] mb-1">{artworks[0].category}</p>
+                                            <h3 className="font-display text-2xl font-semibold">{artworks[0].title}</h3>
+                                            <p className="text-[var(--text-muted)] text-sm mt-1">₹{artworks[0].price?.toLocaleString('en-IN')}</p>
                                         </div>
                                     </div>
+                                </Reveal>
+
+                                {artworks[1] && (
+                                    <Reveal className="lg:col-span-2" delay={0.15}>
+                                        <div
+                                            className="relative overflow-hidden cursor-pointer group"
+                                            onClick={() => openModal(artworks[1])}
+                                        >
+                                            <div className="aspect-[3/4] overflow-hidden">
+                                                <img
+                                                    src={artworks[1].imageUrl}
+                                                    alt={artworks[1].title}
+                                                    className="w-full h-full object-cover img-dramatic"
+                                                />
+                                            </div>
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-700" />
+                                            <div className="mt-4">
+                                                <p className="text-[10px] tracking-[0.3em] uppercase text-[var(--gold)] mb-1">{artworks[1].category}</p>
+                                                <h3 className="font-display text-xl font-semibold">{artworks[1].title}</h3>
+                                                <p className="text-[var(--text-muted)] text-sm mt-1">₹{artworks[1].price?.toLocaleString('en-IN')}</p>
+                                            </div>
+                                        </div>
+                                    </Reveal>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Second row — small + large */}
+                        {artworks.length > 2 && (
+                            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                {artworks[2] && (
+                                    <Reveal className="lg:col-span-2">
+                                        <div
+                                            className="relative overflow-hidden cursor-pointer group"
+                                            onClick={() => openModal(artworks[2])}
+                                        >
+                                            <div className="aspect-[3/4] overflow-hidden">
+                                                <img
+                                                    src={artworks[2].imageUrl}
+                                                    alt={artworks[2].title}
+                                                    className="w-full h-full object-cover img-dramatic"
+                                                />
+                                            </div>
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-700" />
+                                            <div className="mt-4">
+                                                <p className="text-[10px] tracking-[0.3em] uppercase text-[var(--gold)] mb-1">{artworks[2].category}</p>
+                                                <h3 className="font-display text-xl font-semibold">{artworks[2].title}</h3>
+                                                <p className="text-[var(--text-muted)] text-sm mt-1">₹{artworks[2].price?.toLocaleString('en-IN')}</p>
+                                            </div>
+                                        </div>
+                                    </Reveal>
+                                )}
+
+                                {artworks[3] && (
+                                    <Reveal className="lg:col-span-3" delay={0.15}>
+                                        <div
+                                            className="relative overflow-hidden cursor-pointer group"
+                                            onClick={() => openModal(artworks[3])}
+                                        >
+                                            <div className="aspect-[4/3] overflow-hidden">
+                                                <img
+                                                    src={artworks[3].imageUrl}
+                                                    alt={artworks[3].title}
+                                                    className="w-full h-full object-cover img-dramatic"
+                                                />
+                                            </div>
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-700" />
+                                            <div className="mt-4">
+                                                <p className="text-[10px] tracking-[0.3em] uppercase text-[var(--gold)] mb-1">{artworks[3].category}</p>
+                                                <h3 className="font-display text-2xl font-semibold">{artworks[3].title}</h3>
+                                                <p className="text-[var(--text-muted)] text-sm mt-1">₹{artworks[3].price?.toLocaleString('en-IN')}</p>
+                                            </div>
+                                        </div>
+                                    </Reveal>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    <Reveal delay={0.2}>
+                        <div className="text-center mt-16">
+                            <Link to="/gallery" className="btn-outline">
+                                <span>View Full Collection</span>
+                                <HiArrowRight className="relative z-1" />
+                            </Link>
+                        </div>
+                    </Reveal>
+                </div>
+            </section>
+
+            {/* ═══════════ ABOUT THE ARTIST ═══════════ */}
+            <section className="section-padding bg-[var(--bg-alt)]">
+                <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <Reveal>
+                            <div className="aspect-[4/5] overflow-hidden">
+                                {artworks[4] && (
+                                    <img
+                                        src={artworks[4].imageUrl}
+                                        alt="Artist at work"
+                                        className="w-full h-full object-cover"
+                                    />
+                                )}
+                            </div>
+                        </Reveal>
+
+                        <Reveal delay={0.2}>
+                            <div className="max-w-lg">
+                                <div className="flex items-center gap-6 mb-4">
+                                    <div className="divider-gold" />
+                                    <p className="text-[10px] tracking-[0.4em] uppercase text-[var(--gold)]">The Artist</p>
                                 </div>
-                            </motion.div>
+                                <h2 className="text-display text-4xl sm:text-5xl mb-8">
+                                    Swetnisha
+                                    <br />
+                                    <span className="text-editorial text-[var(--text-muted)]">Sharma</span>
+                                </h2>
+                                <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
+                                    Based in Electronic City, Bangalore, Swetnisha creates stunning resin and mixed-media
+                                    artwork that blends organic fluidity with precise artistic vision. Each piece is
+                                    handcrafted with premium materials, making every creation truly one of a kind.
+                                </p>
+                                <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-8">
+                                    With a passion for exploring the boundaries of resin art, Swetnisha's work has found
+                                    homes in collections across India. Her process involves layering pigments, metallic
+                                    elements, and natural textures to create pieces that captivate from every angle.
+                                </p>
+                                <div className="flex items-center gap-6 text-sm text-[var(--text-muted)]">
+                                    <div>
+                                        <p className="font-display text-3xl font-semibold text-[var(--charcoal)]">{artworks.length}+</p>
+                                        <p className="text-[10px] tracking-[0.2em] uppercase mt-1">Artworks</p>
+                                    </div>
+                                    <div className="w-px h-12 bg-[var(--border)]" />
+                                    <div>
+                                        <p className="font-display text-3xl font-semibold text-[var(--charcoal)]">50+</p>
+                                        <p className="text-[10px] tracking-[0.2em] uppercase mt-1">Collectors</p>
+                                    </div>
+                                    <div className="w-px h-12 bg-[var(--border)]" />
+                                    <div>
+                                        <p className="font-display text-3xl font-semibold text-[var(--charcoal)]">BLR</p>
+                                        <p className="text-[10px] tracking-[0.2em] uppercase mt-1">Based in</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </Reveal>
+                    </div>
+                </div>
+            </section>
+
+            {/* ═══════════ TESTIMONIALS ═══════════ */}
+            <section className="section-padding">
+                <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+                    <Reveal>
+                        <div className="text-center mb-16">
+                            <div className="flex items-center justify-center gap-6 mb-4">
+                                <div className="divider-gold" />
+                                <p className="text-[10px] tracking-[0.4em] uppercase text-[var(--gold)]">Testimonials</p>
+                                <div className="divider-gold" />
+                            </div>
+                            <h2 className="text-display text-4xl sm:text-5xl">
+                                What Collectors
+                                <br />
+                                <span className="text-editorial text-[var(--text-muted)]">Say</span>
+                            </h2>
+                        </div>
+                    </Reveal>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {testimonials.map((t, i) => (
+                            <Reveal key={i} delay={i * 0.1}>
+                                <div className="border border-[var(--border)] p-8 lg:p-10">
+                                    <p className="text-editorial text-lg text-[var(--text-secondary)] leading-relaxed mb-8">
+                                        "{t.text}"
+                                    </p>
+                                    <div>
+                                        <p className="text-sm font-medium text-[var(--charcoal)]">{t.name}</p>
+                                        <p className="text-[11px] text-[var(--text-muted)]">{t.location}</p>
+                                    </div>
+                                </div>
+                            </Reveal>
                         ))}
-                    </motion.div>
-                ) : (
-                    <div className="text-center py-20">
-                        <p className="text-text-muted text-lg">No artworks available yet.</p>
-                        <p className="text-text-muted/50 text-sm mt-2">Check back soon for new pieces.</p>
                     </div>
-                )}
-
-                {/* View All Link */}
-                {artworks.length > 6 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-center mt-12"
-                    >
-                        <Link
-                            to="/gallery"
-                            className="inline-flex items-center gap-2 text-primary hover:text-primary-dark transition-colors text-sm tracking-wider uppercase font-medium"
-                        >
-                            View All Artworks <HiArrowRight />
-                        </Link>
-                    </motion.div>
-                )}
+                </div>
             </section>
 
-            {/* ====== CTA SECTION ====== */}
-            <section className="py-24 px-4">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    className="max-w-4xl mx-auto bg-white rounded-3xl p-12 sm:p-16 text-center relative overflow-hidden shadow-xl shadow-primary/5"
-                >
-                    <div className="absolute top-0 left-0 w-60 h-60 bg-primary/5 rounded-full blur-[80px]" />
-                    <div className="absolute bottom-0 right-0 w-80 h-80 bg-secondary/5 rounded-full blur-[100px]" />
-                    <div className="relative z-10">
-                        <h2 className="text-3xl sm:text-4xl font-outfit font-bold text-text mb-4">
-                            Begin Your Art Journey
-                        </h2>
-                        <p className="text-text-secondary max-w-lg mx-auto mb-8">
-                            Explore our complete collection and find the perfect piece that speaks to your soul.
+            {/* ═══════════ CTA ═══════════ */}
+            <section className="section-padding bg-[var(--charcoal)]">
+                <div className="max-w-3xl mx-auto px-6 text-center">
+                    <Reveal>
+                        <p className="text-[10px] tracking-[0.5em] uppercase text-[var(--gold)] mb-8">
+                            Commission a Piece
                         </p>
-                        <Link
-                            to="/gallery"
-                            className="btn-primary inline-flex items-center gap-2 px-10 py-4 rounded-full text-sm tracking-wider uppercase"
-                        >
-                            Enter Gallery <HiArrowRight />
+                        <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-8 leading-tight">
+                            Let's Create Something
+                            <br />
+                            <span className="text-editorial text-[var(--gold-light)]">Extraordinary</span>
+                        </h2>
+                        <p className="text-white/50 text-base max-w-md mx-auto mb-10 leading-relaxed">
+                            Every space deserves art that speaks. Commission a custom piece tailored to your vision.
+                        </p>
+                        <Link to="/gallery" className="btn-gold">
+                            <span>Browse Collection</span>
+                            <HiArrowRight />
                         </Link>
-                    </div>
-                </motion.div>
+                    </Reveal>
+                </div>
             </section>
 
-            {/* Artwork Modal */}
+            {/* Modal */}
             <ArtworkModal
                 artwork={selectedArtwork}
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
+                onAddToCart={addToCart}
             />
         </div>
     );

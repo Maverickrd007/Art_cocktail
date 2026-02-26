@@ -1,16 +1,28 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import API from '../services/api';
 import ArtworkModal from '../components/ArtworkModal';
 import { useCart } from '../context/CartContext';
-import { HiShoppingCart } from 'react-icons/hi';
 
 const CATEGORIES = ['all', 'painting', 'resin', 'abstract', 'portrait', 'landscape', 'modern', 'other'];
 
-/**
- * Full gallery page with category filtering, grid layout,
- * hover effects, and artwork modal — light theme.
- */
+/* Scroll reveal wrapper */
+function Reveal({ children, delay = 0, className = '' }) {
+    const ref = useRef(null);
+    const inView = useInView(ref, { once: true, margin: '-60px' });
+    return (
+        <motion.div
+            ref={ref}
+            initial={{ opacity: 0, y: 30 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className={className}
+        >
+            {children}
+        </motion.div>
+    );
+}
+
 export default function GalleryPage() {
     const [artworks, setArtworks] = useState([]);
     const [filtered, setFiltered] = useState([]);
@@ -28,132 +40,106 @@ export default function GalleryPage() {
                 setFiltered(data);
                 setLoading(false);
             })
-            .catch(err => {
-                console.error(err);
-                setLoading(false);
-            });
+            .catch(() => setLoading(false));
     }, []);
 
-    // Filter by category
-    useEffect(() => {
-        if (activeCategory === 'all') {
-            setFiltered(artworks);
-        } else {
-            setFiltered(artworks.filter(a => a.category === activeCategory));
-        }
-    }, [activeCategory, artworks]);
-
-    const openModal = (artwork) => {
-        setSelectedArtwork(artwork);
-        setModalOpen(true);
+    const handleFilter = (cat) => {
+        setActiveCategory(cat);
+        setFiltered(cat === 'all' ? artworks : artworks.filter(a => a.category === cat));
     };
 
     return (
-        <div className="min-h-screen pt-28 pb-20 px-4 max-w-7xl mx-auto">
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="text-center mb-12"
-            >
-                <p className="text-primary text-xs tracking-[0.4em] uppercase mb-3 font-semibold">Browse Collection</p>
-                <h1 className="text-5xl font-outfit font-bold text-text mb-4">
-                    Our <span className="text-gradient-primary">Gallery</span>
-                </h1>
-                <div className="accent-line max-w-xs mx-auto" />
-            </motion.div>
-
-            {/* Category Filter */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-wrap justify-center gap-3 mb-12"
-            >
-                {CATEGORIES.map(cat => (
-                    <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
-                        className={`px-5 py-2 rounded-full text-xs tracking-wider uppercase transition-all duration-300 font-medium ${activeCategory === cat
-                            ? 'btn-primary'
-                            : 'border border-border text-text-secondary hover:text-primary hover:border-primary/30 bg-white'
-                            }`}
-                    >
-                        {cat}
-                    </button>
-                ))}
-            </motion.div>
-
-            {/* Gallery Grid */}
-            {loading ? (
-                <div className="flex justify-center py-20">
-                    <div className="w-12 h-12 border-3 border-primary-100 border-t-primary rounded-full animate-spin" />
-                </div>
-            ) : filtered.length > 0 ? (
+        <div className="min-h-screen pt-28 pb-20 bg-[var(--bg)]">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+                {/* Header */}
                 <motion.div
-                    layout
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="mb-16"
                 >
-                    {filtered.map((artwork, i) => (
-                        <motion.div
-                            key={artwork._id}
-                            layout
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            exit={{ opacity: 0 }}
-                            className="group cursor-pointer"
-                        >
-                            <div
-                                className="bg-white rounded-2xl overflow-hidden transition-all duration-500 shadow-md shadow-black/5 card-hover"
-                                onClick={() => openModal(artwork)}
-                            >
-                                {/* Image */}
-                                <div className="aspect-[3/4] overflow-hidden relative">
-                                    <img
-                                        src={artwork.imageUrl}
-                                        alt={artwork.title}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                    />
-                                    {/* Quick add button */}
-                                    <motion.button
-                                        initial={{ opacity: 0, y: 10 }}
-                                        whileHover={{ scale: 1.05 }}
-                                        className="absolute bottom-3 right-3 w-10 h-10 bg-white text-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            addToCart(artwork);
-                                        }}
-                                    >
-                                        <HiShoppingCart />
-                                    </motion.button>
-                                </div>
+                    <div className="flex items-center gap-6 mb-4">
+                        <div className="divider-gold" />
+                        <p className="text-[10px] tracking-[0.4em] uppercase text-[var(--gold)]">Collection</p>
+                    </div>
+                    <h1 className="text-display text-5xl sm:text-6xl md:text-7xl mb-6">
+                        The
+                        <br />
+                        <span className="text-editorial text-[var(--text-muted)]">Gallery</span>
+                    </h1>
+                    <p className="text-[var(--text-muted)] text-base max-w-lg leading-relaxed">
+                        Explore our curated collection of handcrafted resin artwork, paintings, and mixed-media pieces.
+                    </p>
+                </motion.div>
 
-                                {/* Info */}
-                                <div className="p-4">
-                                    <p className="text-primary/60 text-[10px] tracking-[0.2em] uppercase font-semibold">{artwork.category}</p>
-                                    <h3 className="text-base font-outfit font-semibold text-text mt-1 truncate">{artwork.title}</h3>
-                                    <p className="text-text-muted text-xs mt-0.5">by Swetnisha Sharma</p>
-                                    <p className="text-xl font-outfit font-bold text-gradient-primary mt-2">
-                                        ₹{artwork.price?.toLocaleString('en-IN')}
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
+                {/* Category filters */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex flex-wrap gap-3 mb-12"
+                >
+                    {CATEGORIES.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => handleFilter(cat)}
+                            className={`text-[10px] tracking-[0.2em] uppercase px-5 py-2.5 border transition-all duration-300 ${activeCategory === cat
+                                    ? 'bg-[var(--charcoal)] text-white border-[var(--charcoal)]'
+                                    : 'bg-transparent text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--charcoal)] hover:text-[var(--charcoal)]'
+                                }`}
+                        >
+                            {cat}
+                        </button>
                     ))}
                 </motion.div>
-            ) : (
-                <div className="text-center py-20">
-                    <p className="text-text-muted text-lg">No artworks found in this category.</p>
-                </div>
-            )}
 
-            {/* Artwork Modal */}
+                {/* Loading */}
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <div className="w-8 h-8 border border-[var(--border)] border-t-[var(--gold)] rounded-full animate-spin" />
+                    </div>
+                ) : (
+                    /* Masonry Grid */
+                    <div className="masonry-grid">
+                        {filtered.map((artwork, i) => (
+                            <Reveal key={artwork._id} delay={(i % 3) * 0.08}>
+                                <div
+                                    className="relative overflow-hidden cursor-pointer group"
+                                    onClick={() => { setSelectedArtwork(artwork); setModalOpen(true); }}
+                                >
+                                    <div className="overflow-hidden">
+                                        <img
+                                            src={artwork.imageUrl}
+                                            alt={artwork.title}
+                                            className="w-full object-cover img-dramatic"
+                                        />
+                                    </div>
+                                    {/* Hover overlay — minimal */}
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-700 flex items-end">
+                                        <div className="p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                                            <p className="text-[9px] tracking-[0.3em] uppercase text-[var(--gold-light)]">{artwork.category}</p>
+                                            <h3 className="font-display text-lg font-semibold text-white">{artwork.title}</h3>
+                                            <p className="text-white/60 text-sm mt-1">₹{artwork.price?.toLocaleString('en-IN')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Reveal>
+                        ))}
+                    </div>
+                )}
+
+                {!loading && filtered.length === 0 && (
+                    <div className="text-center py-20">
+                        <p className="text-[var(--text-muted)] text-editorial text-lg">No artworks found in this category.</p>
+                    </div>
+                )}
+            </div>
+
             <ArtworkModal
                 artwork={selectedArtwork}
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
+                onAddToCart={addToCart}
             />
         </div>
     );
