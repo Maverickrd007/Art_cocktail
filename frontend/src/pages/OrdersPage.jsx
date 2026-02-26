@@ -20,7 +20,7 @@ export default function OrdersPage() {
     }, []);
 
     return (
-        <div className="min-h-screen pt-28 pb-20 px-6 bg-[var(--bg)]">
+        <div className="min-h-screen pt-32 pb-20 px-6 bg-[var(--bg)]">
             <div className="max-w-4xl mx-auto">
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
                     <div className="flex items-center gap-6 mb-4">
