@@ -242,8 +242,8 @@ export default function HomePage() {
 
             {/* ═══════════ CTA BANNER ═══════════ */}
             <section className="py-24 lg:py-32 bg-[var(--charcoal)]">
-                <div className="max-w-3xl mx-auto px-8 text-center">
-                    <Reveal>
+                <div className="max-w-3xl mx-auto px-8">
+                    <Reveal className="flex flex-col items-center text-center">
                         <p className="text-[10px] tracking-[0.5em] uppercase text-[var(--gold)] mb-8">Commission a Piece</p>
                         <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-8 leading-tight">
                             Let's Create Something <br />
